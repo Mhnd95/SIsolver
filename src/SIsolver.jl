@@ -12,7 +12,7 @@ using LaTeXStrings
 
 
 function read_data_file(filename::String)
-    CSV.read(filename; header=false, skipto=6, DataFrame) |> Tables.matrix
+    CSV.read(filename, DataFrame; header=false, skipto=6) |> Tables.matrix
 end
 
 
