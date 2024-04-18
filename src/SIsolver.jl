@@ -65,18 +65,26 @@ function experimental_results(filename::String, θ::Float64)
 end
 
 function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
-    # Normalized calculated recovery factor equation:
-    # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_dimensionless)-a[2]e^(-λ[2]*t_dimensionless)-a[3]e^(-λ[3]*t_dimensionless))
-    t_dimensionless = experimental_results(filename::String, θ::Float64)    
-
     if length(a) != length(λ)
         throw(ArgumentError("Length of 'a' and 'λ' vectors must be equal."))
     end
+
+    # Normalized calculated recovery factor equation:
+    # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_dimensionless)-a[2]e^(-λ[2]*t_dimensionless)-a[3]e^(-λ[3]*t_dimensionless))
+    t_dimensionless = experimental_results(filename::String, θ::Float64)    
+    length_time = length(t_dimensionless)
+    R_calculated_normalized = zeros(length_time)
+    
     λ_1 = λ[1]
     λ_2 = λ[2]
     λ_3 = λ[3]
-    
-    R_calculated_normalized = 1 .- a[1] .* exp.(-λ_1 .* t_dimensionless) .- a[2] .* exp.(-λ_2 .* t_dimensionless) .- a[3] .* exp.(-λ_3 .* t_dimensionless)
+    i=1
+
+    while i in 1:length_time
+        R_calculated_normalized[i] = 1 .- a[1] .* exp.(-λ_1 * t_dimensionless[i]) .- a[2] .* exp.(-λ_2 .* t_dimensionless[i]) .- a[3] .* exp.(-λ_3 .* t_dimensionless[i])
+    end
+
+    # R_calculated_normalized = 1 .- a[1] .* exp.(-λ_1 .* t_dimensionless) .- a[2] .* exp.(-λ_2 .* t_dimensionless) .- a[3] .* exp.(-λ_3 .* t_dimensionless)
     return R_calculated_normalized
 end
 
