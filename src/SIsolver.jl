@@ -2,6 +2,8 @@ module SIsolver
 
 function hello()
     println("Hello, World!")
+    x = 1
+    return x
 end
 
 using CSV
