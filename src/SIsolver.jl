@@ -20,12 +20,9 @@ function read_data_file(filename::String)
 end
 
 
-function shape_factor(volume::Float64, areas::Vector{Float64}, distances::Vector{Float64})
+function shape_factor()
     # F_s = 1 / V_ma * sum ( Area of ith surface open to flow / Distance of the ith surface from center of matrix ) from 1 to number of surfaces
 
-    if length(areas) != length(distances)
-        throw(ArgumentError("Length of areas and distances vectors must be equal."))
-    end
     areas = 2.0
     s = length(areas)
     sum_A_over_d = 0.0
@@ -40,14 +37,16 @@ function shape_factor(volume::Float64, areas::Vector{Float64}, distances::Vector
     end
 
     F_s = (1 / volume) * sum_A_over_d
+
     return F_s
 end
 
-function experimental_results(filename::String, θ::Float64, F_s::Float64, σ::Float64, µ_w::Float64, k::Float64, Φ::Float64)
+function experimental_results(filename::String, θ::Float64)
     ExprmntData = read_data_file(filename)
     t_exprmnt = ExprmntData[:, 1]
     R_exprmnt = ExprmntData[:, 2]
-    
+    F_s = shape_factor()
+
     # dimensionless time equation
     # t_D = [ ( σ * cos(θ) F_s / µ_w ) * sqrt(k/Φ) ] t_exprmnt
     # σ = interfacial tension, θ = contact angle, µ_w = water viscosity, k = permeability, Φ = porosity
@@ -65,9 +64,10 @@ function experimental_results(filename::String, θ::Float64, F_s::Float64, σ::F
     return t_dimensionless, R_exprmnt_normalized
 end
 
-function R_calculated(t_dimensionless::Vector{Float64}, a::Vector{Float64}, λ::Vector{Float64})
+function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
     # Normalized calculated recovery factor equation:
     # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_dimensionless)-a[2]e^(-λ[2]*t_dimensionless)-a[3]e^(-λ[3]*t_dimensionless))
+    t_dimensionless = experimental_results(filename::String, θ::Float64)    
 
     if length(a) != length(λ)
         throw(ArgumentError("Length of 'a' and 'λ' vectors must be equal."))
