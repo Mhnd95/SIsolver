@@ -1,13 +1,18 @@
 # SIsolver
 Project to apply an algorithm that takes spontaneous imbibition data and predicts contact angle or any other missing parameter.  
 
-Command line running sequence:
+Using the following sequence in Visual Studios:
 
-SIsolver.read_data_file("data\\data.csv")
+file path = "data\\data.csv"
 
-SIsolver.shape_factor(0.0,[0.0,0.0],[0.0,0.0])
+julia --project=.
 
-SIsolver.experimental_results("data\\data.csv", 0.0, 0.238, 0.00, 0.0,0.0,0.0) #where 0.238 is the output of the previous line.
+using SIsolver
 
+SIsolver.R_calculated("data\\data.csv", 0.0, [0.33,0.33,0.33], [0.01,0.01,0.01])
+
+Current issue:
+
+* fix the R_calcualted as exp function cannot take vector as input, the vector in this case is t_experimental
 
 [![Build Status](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml?query=branch%3Amaster)

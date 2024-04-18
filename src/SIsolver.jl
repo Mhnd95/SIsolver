@@ -72,8 +72,11 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
     if length(a) != length(λ)
         throw(ArgumentError("Length of 'a' and 'λ' vectors must be equal."))
     end
-
-    R_calculated_normalized = 1 .- a[1] .* exp.(-λ[1] .* t_dimensionless) .- a[2] .* exp.(-λ[2] .* t_dimensionless) .- a[3] .* exp.(-λ[3] .* t_dimensionless)
+    λ_1 = λ[1]
+    λ_2 = λ[2]
+    λ_3 = λ[3]
+    
+    R_calculated_normalized = 1 .- a[1] .* exp.(-λ_1 .* t_dimensionless) .- a[2] .* exp.(-λ_2 .* t_dimensionless) .- a[3] .* exp.(-λ_3 .* t_dimensionless)
     return R_calculated_normalized
 end
 
