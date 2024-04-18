@@ -3,7 +3,8 @@ module SIsolver
 function hello()
     println("Hello, World!")
     x = 1
-    return x
+    y = 2 
+    return x, y
 end
 
 using Revise
