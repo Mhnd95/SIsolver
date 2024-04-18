@@ -6,6 +6,7 @@ function hello()
     return x
 end
 
+using Revise
 using CSV
 using DataFrames
 using Tables
