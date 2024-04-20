@@ -41,14 +41,13 @@ function shape_factor()
     return F_s
 end
 
-function experimental_results(filename::String, θ::Float64)
+function t_dimensionless(filename::String, θ::Float64)
     ExprmntData = read_data_file(filename)
     t_exprmnt = ExprmntData[:, 1]
-    R_exprmnt = ExprmntData[:, 2]
     F_s = shape_factor()
 
     # dimensionless time equation
-    # t_D = [ ( σ * cos(θ) F_s / µ_w ) * sqrt(k/Φ) ] t_exprmnt
+    # t_d = [ ( σ * cos(θ) F_s / µ_w ) * sqrt(k/Φ) ] t_exprmnt
     # σ = interfacial tension, θ = contact angle, µ_w = water viscosity, k = permeability, Φ = porosity
     σ = 14.12       # interfacial tension
     µ_w = 0.983     # water viscosity
@@ -58,10 +57,18 @@ function experimental_results(filename::String, θ::Float64)
     # Φ = ( 21.7 + 21.3 + 21.6 + 21.3 + 21.3 + 21.1 ) / 6            # porosity
     Φ = 21.7
 
-    t_dimensionless = ( (σ * cos(θ) * F_s / µ_w) * sqrt(k / Φ) ) .* t_exprmnt
+    t_d = ( (σ * cos(θ) * F_s / µ_w) * sqrt(k / Φ) ) .* t_exprmnt
+    
+
+    return t_d
+end
+
+function R_experimental(filename::String)
+    ExprmntData = read_data_file(filename)
+    R_exprmnt = ExprmntData[:, 2]
     R_exprmnt_normalized = R_exprmnt ./ R_exprmnt[end]
 
-    return t_dimensionless, R_exprmnt_normalized
+    return R_exprmnt_normalized
 end
 
 function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
@@ -70,21 +77,10 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
     end
 
     # Normalized calculated recovery factor equation:
-    # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_dimensionless)-a[2]e^(-λ[2]*t_dimensionless)-a[3]e^(-λ[3]*t_dimensionless))
-    t_dimensionless = experimental_results(filename::String, θ::Float64)    
-    length_time = length(t_dimensionless)
-    R_calculated_normalized = zeros(length_time)
-    
-    λ_1 = λ[1]
-    λ_2 = λ[2]
-    λ_3 = λ[3]
-    i=1
+    # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_d)-a[2]e^(-λ[2]*t_d)-a[3]e^(-λ[3]*t_d))
+    t_d = t_dimensionless(filename::String, θ::Float64)    
 
-    while i in 1:length_time
-        R_calculated_normalized[i] = 1 .- a[1] .* exp.(-λ_1 * t_dimensionless[i]) .- a[2] .* exp.(-λ_2 .* t_dimensionless[i]) .- a[3] .* exp.(-λ_3 .* t_dimensionless[i])
-    end
-
-    # R_calculated_normalized = 1 .- a[1] .* exp.(-λ_1 .* t_dimensionless) .- a[2] .* exp.(-λ_2 .* t_dimensionless) .- a[3] .* exp.(-λ_3 .* t_dimensionless)
+    R_calculated_normalized = 1 .- a[1] .* exp.(-λ[1] .* t_d) .- a[2] .* exp.(-λ[2] .* t_d) .- a[3] .* exp.(-λ[3] .* t_d)
     return R_calculated_normalized
 end
 
@@ -96,7 +92,7 @@ function global_objective(R_exprmnt_normalized::Vector{Float64}, R_calculated_no
     # Global objective function that will be used to calculate the error
     S_ri = sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
     # How do I make sure that point 1 in R_exprmnt_normalized is compared to R_calculated_normalized?
-    # correlated_data = hcat(t_dimensionless, R_exprmnt_normalized, R_calculated_normalized)
+    # correlated_data = hcat(t_d, R_exprmnt_normalized, R_calculated_normalized)
     O_g = S_ri
     return O_g
 end
@@ -106,8 +102,8 @@ function optimization_objective(params::Vector{Float64}, filename::String, F_s::
     λ = params[4:6]
     θ = params[7]
 
-    t_dimensionless, R_exprmnt_normalized = experimental_results(filename, θ, F_s, σ, µ_w, k, Φ)
-    R_calculated_normalized = R_calculated(t_dimensionless, a, λ)
+    t_d, R_exprmnt_normalized = experimental_results(filename, θ, F_s, σ, µ_w, k, Φ)
+    R_calculated_normalized = R_calculated(t_d, a, λ)
     O_g = global_objective(R_exprmnt_normalized, R_calculated_normalized)
 
     return O_g

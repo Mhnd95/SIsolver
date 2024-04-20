@@ -11,8 +11,8 @@ using SIsolver
 
 SIsolver.R_calculated("data\\data.csv", 0.0, [0.33,0.33,0.33], [0.01,0.01,0.01])
 
-Current issue:
+Current step:
 
-* fix the R_calcualted as exp function cannot take vector as input, the vector in this case is t_experimental
+* work on global objective
 
-[![Build Status](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml?query=branch%3Amain)
