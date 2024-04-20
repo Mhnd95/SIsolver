@@ -84,11 +84,13 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
     return R_calculated_normalized
 end
 
-function global_objective(R_exprmnt_normalized::Vector{Float64}, R_calculated_normalized::Vector{Float64})
+function global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
     if length(R_exprmnt_normalized) != length(R_calculated_normalized)
         throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
     end
 
+    R_exprmnt_normalized = R_experimental(filename::String)
+    R_calculated_normalized = R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
     # Global objective function that will be used to calculate the error
     S_ri = sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
     # How do I make sure that point 1 in R_exprmnt_normalized is compared to R_calculated_normalized?
