@@ -1,5 +1,6 @@
 module SIsolver
 
+# to test if the module is working and loaded properly
 function hello()
     println("Hello, World!")
     x = 1
@@ -85,16 +86,15 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
 end
 
 function global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
+    R_exprmnt_normalized = R_experimental(filename::String)
+    R_calculated_normalized = R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
     if length(R_exprmnt_normalized) != length(R_calculated_normalized)
         throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
     end
 
-    R_exprmnt_normalized = R_experimental(filename::String)
-    R_calculated_normalized = R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
-    # Global objective function that will be used to calculate the error
+    # Global objective function that will be used to calculate the error (Residual sum of squares)
     S_ri = sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
-    # How do I make sure that point 1 in R_exprmnt_normalized is compared to R_calculated_normalized?
-    # correlated_data = hcat(t_d, R_exprmnt_normalized, R_calculated_normalized)
+
     O_g = S_ri
     return O_g
 end
@@ -104,9 +104,10 @@ function optimization_objective(params::Vector{Float64}, filename::String, F_s::
     λ = params[4:6]
     θ = params[7]
 
-    t_d, R_exprmnt_normalized = experimental_results(filename, θ, F_s, σ, µ_w, k, Φ)
-    R_calculated_normalized = R_calculated(t_d, a, λ)
-    O_g = global_objective(R_exprmnt_normalized, R_calculated_normalized)
+    t_d = t_dimensionless(filename::String, θ::Float64)
+    R_exprmnt_normalized = R_experimental(filename::String)
+    R_calculated_normalized = R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
+    O_g = global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
 
     return O_g
 end
