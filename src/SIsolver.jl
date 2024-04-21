@@ -100,6 +100,23 @@ function global_objective(params::Vector{Float64}, filename::String)
     return S_ri
 end
 
+# Optimization function for each file (Inner Optimization)
+function optimize_theta(filename::String, a::Vector{Float64}, λ::Vector{Float64})
+    obj_func = θ -> global_objective([a..., λ..., θ], filename)
+    initial_theta = 0.0  # Initial guess for θ
+    result = Optim.optimize(obj_func, initial_theta, NelderMead(), Optim.Options(show_trace=true))
+    optimized_theta = result.minimizer
+    return optimized_theta
+end
+
+# Outer optimization to adjust a and λ across multiple files
+function optimize_params_across_files(filenames::Vector{String}, initial_params::Vector{Float64})
+    obj_func = params -> sum(global_objective([params..., optimize_theta(filenames[i], params[1:3], params[4:6])], filenames[i]) for i in 1:length(filenames))
+    result = Optim.optimize(obj_func, initial_params, NelderMead(), Optim.Options(show_trace=true))
+    optimized_params = result.minimizer
+    return optimized_params
+end
+
 function optimize_parameters(filename::String, initial_params::Vector{Float64})
     obj_func = params -> global_objective(params, filename)
     result = Optim.optimize(obj_func, initial_params, NelderMead(), Optim.Options(show_trace=true))
