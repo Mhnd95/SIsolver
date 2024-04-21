@@ -12,7 +12,8 @@ using Revise
 using CSV
 using DataFrames
 using Tables
-using Optimisers
+# using Optimisers
+using Optim
 using LaTeXStrings
 
 
@@ -85,24 +86,32 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
     return R_calculated_normalized
 end
 
-function global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
+function global_objective(params::Vector{Float64}, filename::String)
+    a, λ, θ = params[1:3], params[4:6], params[7]
     R_exprmnt_normalized = R_experimental(filename)
     R_calculated_normalized = R_calculated(filename, θ, a, λ)
+    
     if length(R_exprmnt_normalized) != length(R_calculated_normalized)
         throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
     end
 
-    # Global objective function that will be used to calculate the error (Residual sum of squares)
+    # Residual sum of squares
     S_ri = sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
-
     return S_ri
 end
 
-function optimize_parameters(filename::String, F_s::Float64, σ::Float64, µ_w::Float64, k::Float64, Φ::Float64, initial_params::Vector{Float64})
-result = optimize(params -> optimization_objective(params, filename, F_s, σ, µ_w, k, Φ), initial_params)
+function optimize_parameters(filename::String, initial_params::Vector{Float64})
+    obj_func = params -> global_objective(params, filename)
+    result = Optim.optimize(obj_func, initial_params, NelderMead(), Optim.Options(show_trace=true))
     optimized_params = result.minimizer
-
     return optimized_params
 end
+
+#function optimize_parameters(filename::String, initial_params::Vector{Float64})
+#    result = optimize(params -> global_objective(params, filename), initial_params)
+#    optimized_params = result.minimizer
+
+#    return optimized_params
+#end
 
 end
