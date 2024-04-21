@@ -79,15 +79,15 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
 
     # Normalized calculated recovery factor equation:
     # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_d)-a[2]e^(-λ[2]*t_d)-a[3]e^(-λ[3]*t_d))
-    t_d = t_dimensionless(filename::String, θ::Float64)    
+    t_d = t_dimensionless(filename, θ)    
 
     R_calculated_normalized = 1 .- a[1] .* exp.(-λ[1] .* t_d) .- a[2] .* exp.(-λ[2] .* t_d) .- a[3] .* exp.(-λ[3] .* t_d)
     return R_calculated_normalized
 end
 
 function global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
-    R_exprmnt_normalized = R_experimental(filename::String)
-    R_calculated_normalized = R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
+    R_exprmnt_normalized = R_experimental(filename)
+    R_calculated_normalized = R_calculated(filename, θ, a, λ)
     if length(R_exprmnt_normalized) != length(R_calculated_normalized)
         throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
     end
@@ -95,25 +95,11 @@ function global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ:
     # Global objective function that will be used to calculate the error (Residual sum of squares)
     S_ri = sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
 
-    O_g = S_ri
-    return O_g
-end
-
-function optimization_objective(params::Vector{Float64}, filename::String, F_s::Float64, σ::Float64, µ_w::Float64, k::Float64, Φ::Float64)
-    a = params[1:3]
-    λ = params[4:6]
-    θ = params[7]
-
-    t_d = t_dimensionless(filename::String, θ::Float64)
-    R_exprmnt_normalized = R_experimental(filename::String)
-    R_calculated_normalized = R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
-    O_g = global_objective(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
-
-    return O_g
+    return S_ri
 end
 
 function optimize_parameters(filename::String, F_s::Float64, σ::Float64, µ_w::Float64, k::Float64, Φ::Float64, initial_params::Vector{Float64})
-    result = optimize(params -> optimization_objective(params, filename, F_s, σ, µ_w, k, Φ), initial_params)
+result = optimize(params -> optimization_objective(params, filename, F_s, σ, µ_w, k, Φ), initial_params)
     optimized_params = result.minimizer
 
     return optimized_params
