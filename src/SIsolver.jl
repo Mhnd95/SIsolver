@@ -121,7 +121,9 @@ function optimize_parameters(filename::String, initial_params::Vector{Float64})
     obj_func = params -> global_objective(params, filename)
     result = Optim.optimize(obj_func, initial_params, NelderMead(), Optim.Options(show_trace=true))
     optimized_params = result.minimizer
-    return optimized_params
+
+    output = "a = " * string(optimized_params[1:3]) * ", λ = " * string(optimized_params[4:6]) * ", θ = " * string(optimized_params[7])
+    return output
 end
 
 #function optimize_parameters(filename::String, initial_params::Vector{Float64})
