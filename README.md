@@ -19,9 +19,9 @@ julia --project=.
 
 using SIsolver
 
-SIsolver.optimize_parameters("data/data.csv",[0.33,0.33,0.33,0.01,0.01,0.01,0.0])
+SIsolver.optimize_parameters("data/0 hr.csv",[0.33,0.33,0.33,0.01,0.01,0.01,0.0])
 
-SIsolver.optimize_params_across_files(["data/data.csv","data/1 hr.csv"], [0.33,0.33,0.33,0.01,0.01,0.01,0.0])
+SIsolver.optimize_params_across_files(["data/0 hr.csv","data/1 hr.csv"], [0.33,0.33,0.33,0.01,0.01,0.01,0.0])
 
 Current step:
 
@@ -29,7 +29,7 @@ Current step:
 
 Trials:
 
-SIsolver.optimize_params_across_files(["data/data.csv","data/1 hr.csv"], [0.33,0.33,0.33,0.01,0.01,0.01,0.0])
+SIsolver.optimize_params_across_files(["data/0 hr.csv","data/1 hr.csv"], [0.33,0.33,0.33,0.01,0.01,0.01,0.0])
 
 SIsolver.plot_error_vs_time_across_files(["data/0 hr.csv", "data/1 hr.csv","data/6 hr.csv", "data/12 hr.csv", "data/24 hr.csv", "data/48 hr.csv"], [0.33, 0.33, 0.33, 0.01, 0.01, 0.01, 0.0], "error_vs_time_across_files.png")
 
