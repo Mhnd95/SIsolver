@@ -15,6 +15,7 @@ using Tables
 # using Optimisers
 using Optim
 using LaTeXStrings
+using Plots
 
 
 function read_data_file(filename::String)
@@ -24,20 +25,10 @@ end
 
 function shape_factor()
     # F_s = 1 / V_ma * sum ( Area of ith surface open to flow / Distance of the ith surface from center of matrix ) from 1 to number of surfaces
-
-    areas = 2.0
-    s = length(areas)
-    sum_A_over_d = 0.0
-    
-    # Sample volumetric data, needs to be realistic core plug scale 
-    volume = 0.5 * 1.5 ^ 2 * pi * 2.8
-    areas = [0.5 * 1.5 ^ 2 * pi, 2.8 * 2 * pi * 1.5]
-    distances = [1.5 , 1.4]
-
-    for i in 1:s
-        sum_A_over_d += areas[i] / distances[i]
-    end
-
+    areas = [0.5 * 1.5^2 * pi, 2.8 * 2 * pi * 1.5]
+    distances = [1.5, 1.4]
+    volume = 0.5 * 1.5^2 * pi * 2.8
+    sum_A_over_d = sum(areas[i] / distances[i] for i in 1:length(areas))
     F_s = (1 / volume) * sum_A_over_d
 
     return F_s
@@ -102,19 +93,44 @@ end
 
 # Optimization function for each file (Inner Optimization)
 function optimize_theta(filename::String, a::Vector{Float64}, λ::Vector{Float64})
-    obj_func = θ -> global_objective([a..., λ..., θ], filename)
-    initial_theta = 0.0  # Initial guess for θ
+    obj_func = θ -> global_objective(vcat(a, λ, θ), filename)
+    initial_theta = [0.0]  # Initial guess for θ
     result = Optim.optimize(obj_func, initial_theta, NelderMead(), Optim.Options(show_trace=true))
-    optimized_theta = result.minimizer
+    optimized_theta = result.minimizer[1]
     return optimized_theta
 end
 
 # Outer optimization to adjust a and λ across multiple files
 function optimize_params_across_files(filenames::Vector{String}, initial_params::Vector{Float64})
-    obj_func = params -> sum(global_objective([params..., optimize_theta(filenames[i], params[1:3], params[4:6])], filenames[i]) for i in 1:length(filenames))
+    obj_func = params -> sum(global_objective(vcat(params[1:6], optimize_theta(filenames[i], params[1:3], params[4:6])), filenames[i]) for i in 1:length(filenames))
     result = Optim.optimize(obj_func, initial_params, NelderMead(), Optim.Options(show_trace=true))
     optimized_params = result.minimizer
     return optimized_params
+end
+
+function plot_error_vs_time_across_files(filenames::Vector{String}, initial_params::Vector{Float64}, save_path::String)
+    optimized_params = optimize_params_across_files(filenames, initial_params)
+    a, λ = optimized_params[1:3], optimized_params[4:6]
+
+    p = plot(title="Error vs Time for Multiple Files", xlabel="Time", ylabel="Error")
+
+    for filename in filenames
+        θ = optimize_theta(filename, a, λ)
+        ExprmntData = read_data_file(filename)
+        t_exprmnt = ExprmntData[:, 1]
+        R_exprmnt_normalized = R_experimental(filename)
+        R_calculated_normalized = R_calculated(filename, θ, a, λ)
+        
+        if length(R_exprmnt_normalized) != length(R_calculated_normalized)
+            throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
+        end
+
+        error = R_exprmnt_normalized .- R_calculated_normalized
+        
+        plot!(p, t_exprmnt, error, label=filename, lw=2)
+    end
+
+    savefig(p, save_path)
 end
 
 function optimize_parameters(filename::String, initial_params::Vector{Float64})
@@ -126,11 +142,20 @@ function optimize_parameters(filename::String, initial_params::Vector{Float64})
     return output
 end
 
-#function optimize_parameters(filename::String, initial_params::Vector{Float64})
-#    result = optimize(params -> global_objective(params, filename), initial_params)
-#    optimized_params = result.minimizer
+function plot_error_vs_time(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64}, save_path::String)
+    ExprmntData = read_data_file(filename)
+    t_exprmnt = ExprmntData[:, 1]
+    R_exprmnt_normalized = R_experimental(filename)
+    R_calculated_normalized = R_calculated(filename, θ, a, λ)
+    
+    if length(R_exprmnt_normalized) != length(R_calculated_normalized)
+        throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
+    end
 
-#    return optimized_params
-#end
+    error = R_exprmnt_normalized .- R_calculated_normalized
+    
+    p = plot(t_exprmnt, error, xlabel="Time", ylabel="Error", title="Error vs Time", label="Error", lw=2)
+    savefig(p, save_path)
+end
 
 end
