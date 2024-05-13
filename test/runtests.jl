@@ -6,7 +6,7 @@ using DataFrames
 @testset "SIsolver.jl" begin
     SIsolver.hello()
     
-    # Test function for plot_error_vs_time_across_files without saving the plot
+    # Test function for plot_error_vs_time_across_files with plot saving
     function test_plot_error_vs_time_across_files()
         # Create synthetic data for testing
         filenames = ["test_data1.csv", "test_data2.csv"]
@@ -23,8 +23,11 @@ using DataFrames
         # Call the function to test
         try
             SIsolver.plot_error_vs_time_across_files(filenames, initial_params, save_path)
-            println("Test passed: Function executed successfully.")
-            @test true
+            
+            # Check if the file was created
+            @test isfile(save_path) == true
+            
+            println("Test passed: Plot saved successfully.")
         catch e
             println("Test failed with error: $e")
             @test false
