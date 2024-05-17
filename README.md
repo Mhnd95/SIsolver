@@ -25,12 +25,9 @@ SIsolver.optimize_params_across_files(["data/0 hr.csv","data/1 hr.csv"], [0.33,0
 
 Current step:
 
-* The code takes one file and predicts all parameters from that input. Need to take all data files and have the same a and \lambda across the different tests but independent \theta for each case.
+Status: The code takes one file and predicts all parameters from that input.
+Goal: Need to take all data files and have the same "a" and "lambda" parameters across the different tests but independent "theta" for each case.
 
-Trials:
+Trial:
 
-SIsolver.optimize_params_across_files(["data/0 hr.csv","data/1 hr.csv"], [0.33,0.33,0.33,0.01,0.01,0.01,0.0])
-
-SIsolver.plot_error_vs_time_across_files(["data/0 hr.csv", "data/1 hr.csv","data/6 hr.csv", "data/12 hr.csv", "data/24 hr.csv", "data/48 hr.csv"], [0.33, 0.33, 0.33, 0.01, 0.01, 0.01, 0.0], "error_vs_time_across_files.png")
-
-[![Build Status](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/Muhannad Alabdullateef/SIsolver.jl/actions/workflows/CI.yml?query=branch%3Amain)
+SIsolver.plot_results(" hr.csv","trial")

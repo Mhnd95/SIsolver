@@ -81,7 +81,7 @@ function global_objective(params::Vector{Float64}, filename::String)
     a, λ, θ = params[1:3], params[4:6], params[7]
     R_exprmnt_normalized = R_experimental(filename)
     _, R_calculated_normalized = R_calculated(filename, θ, a, λ)
-    
+
     if length(R_exprmnt_normalized) != length(R_calculated_normalized)
         println("R_exprmnt_normalized length: ", length(R_exprmnt_normalized))
         println("R_calculated_normalized length: ", length(R_calculated_normalized))
@@ -99,7 +99,7 @@ function optimize_theta(filename::String, a::Vector{Float64}, λ::Vector{Float64
     initial_theta = [0.0]  # Initial guess for θ
     lower_bound = [0.0]
     upper_bound = [π]
-    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(NelderMead()), Optim.Options(show_trace=false))
+    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(LBFGS()), Optim.Options(show_trace=true))
     optimized_theta = result.minimizer[1]
     return optimized_theta
 end
@@ -120,15 +120,19 @@ function optimize_params_across_files(filenames::Vector{String})
     lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Lower bounds for a and λ
     upper_bounds = [Inf, Inf, Inf, Inf, Inf, Inf] # No upper bounds for a and λ
     
-    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), Optim.Options(show_trace=false))
+    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(LBFGS()), Optim.Options(show_trace=true,))
     optimized_params = result.minimizer
     return optimized_params
 end
 
-function plot_results(folder::String, file_pattern::String, save_path::String)
+function plot_results(file_pattern::String, save_path::String)
     # Find all relevant files in the folder
-    filenames = filter(x -> occursin(file_pattern, x), readdir(folder))
-    filenames = [joinpath(folder, x) for x in filenames]
+    data_folder = "data"
+    filenames = filter(x -> occursin(file_pattern, x), readdir(data_folder))
+    filenames = [joinpath(data_folder, x) for x in filenames]
+    
+    output_folder = "output"
+    save_path = joinpath(output_folder, save_path)
 
     optimized_params = optimize_params_across_files(filenames)
     a, λ = optimized_params[1:3], optimized_params[4:6]
