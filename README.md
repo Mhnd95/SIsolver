@@ -31,3 +31,17 @@ Goal: Need to take all data files and have the same "a" and "lambda" parameters 
 Trial:
 
 SIsolver.plot_results(" hr.csv","trial")
+
+LBFG results:
+
+Optimized Parameters:
+6×8 DataFrame
+ Row │ File            a1       a2       a3        λ1         λ2         λ3         θ_deg   
+     │ String          Float64  Float64  Float64   Float64    Float64    Float64    Float64 
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │ data/0 hr.csv   0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  86.9234
+   2 │ data/1 hr.csv   0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  88.1008
+   3 │ data/12 hr.csv  0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  89.016
+   4 │ data/24 hr.csv  0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  89.2684
+   5 │ data/48 hr.csv  0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  89.3883
+   6 │ data/6 hr.csv   0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  88.7665
