@@ -68,8 +68,8 @@ println("Optimized parameters: ", optimized_params)
 
 ## Current Status
 
-***Status**: The code runs smoothly and produces favorable results.
-***Goal**: Increase data set size and generate synthetic sets to test for code validity.
+* **Status**: The code runs smoothly and produces favorable results.
+* **Goal**: Increase data set size and generate synthetic sets to test for code validity.
 
 ## Trial
 
