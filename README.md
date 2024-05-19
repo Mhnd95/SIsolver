@@ -63,7 +63,6 @@ using SIsolver
 
 filename = "data/0 hr.csv"
 optimized_params = SIsolver.optimize_parameters(filename)
-println("Optimized parameters: ", optimized_params)
 ```
 
 ## Current Status
