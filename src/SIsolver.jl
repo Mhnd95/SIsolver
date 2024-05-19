@@ -12,11 +12,10 @@ using Revise
 using CSV
 using DataFrames
 using Tables
-# using Optimisers
 using Optim
 using LaTeXStrings
 using Plots
-
+using StatsPlots
 
 function read_data_file(filename::String)
     CSV.read(filename, DataFrame; header=false, skipto=6) |> Tables.matrix
@@ -77,20 +76,27 @@ function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vec
     return t_d, R_calculated_normalized
 end
 
-function global_objective(params::Vector{Float64}, filename::String)
-    a, λ, θ = params[1:3], params[4:6], params[7]
-    R_exprmnt_normalized = R_experimental(filename)
-    _, R_calculated_normalized = R_calculated(filename, θ, a, λ)
+function global_objective(params::Vector{Float64}, filenames::Vector{String})
+    n_files = length(filenames)
+    a, λ = params[1:3], params[4:6]
+    θ_values = params[7:end]
 
-    if length(R_exprmnt_normalized) != length(R_calculated_normalized)
-        println("R_exprmnt_normalized length: ", length(R_exprmnt_normalized))
-        println("R_calculated_normalized length: ", length(R_calculated_normalized))
-        throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
+    total_error = 0.0
+    for i in 1:n_files
+        θ = θ_values[i]
+        R_exprmnt_normalized = R_experimental(filenames[i])
+        _, R_calculated_normalized = R_calculated(filenames[i], θ, a, λ)
+
+        if length(R_exprmnt_normalized) != length(R_calculated_normalized)
+            println("R_exprmnt_normalized length: ", length(R_exprmnt_normalized))
+            println("R_calculated_normalized length: ", length(R_calculated_normalized))
+            throw(ArgumentError("Length of R_exprmnt_normalized and R_calculated_normalized vectors must be equal."))
+        end
+
+        total_error += sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
     end
 
-    # Residual sum of squares
-    S_ri = sum((R_exprmnt_normalized .- R_calculated_normalized) .^ 2)
-    return S_ri
+    return total_error
 end
 
 # Optimization function for each file (Inner Optimization)
@@ -99,34 +105,30 @@ function optimize_theta(filename::String, a::Vector{Float64}, λ::Vector{Float64
     initial_theta = [0.0]  # Initial guess for θ
     lower_bound = [0.0]
     upper_bound = [π]
-    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(LBFGS()), Optim.Options(show_trace=true))
+    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(NelderMead()), Optim.Options(show_trace=true))
     optimized_theta = result.minimizer[1]
     return optimized_theta
 end
 
 # Outer optimization to adjust a and λ across multiple files
-function optimize_params_across_files(filenames::Vector{String})
+function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1000)
+    n_files = length(filenames)
     initial_params = [0.33, 0.33, 0.33, 0.01, 0.01, 0.01]
-    obj_func = params -> begin
-        a, λ = params[1:3], params[4:6]
-        total_error = 0.0
-        for i in 1:length(filenames)
-            θ = optimize_theta(filenames[i], a, λ)
-            total_error += global_objective(vcat(a, λ, θ), filenames[i])
-        end
-        return total_error
-    end
+    initial_θ = fill(0.0, n_files)
+    initial_params = vcat(initial_params, initial_θ)
 
-    lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Lower bounds for a and λ
-    upper_bounds = [Inf, Inf, Inf, Inf, Inf, Inf] # No upper bounds for a and λ
+    obj_func = params -> global_objective(params, filenames)
+
+    lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, fill(0.0, n_files)...]
+    upper_bounds = [Inf, Inf, Inf, Inf, Inf, Inf, fill(π, n_files)...]
     
-    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(LBFGS()), Optim.Options(show_trace=true,))
+    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), Optim.Options(show_trace=true, iterations=max_iter))
     optimized_params = result.minimizer
     return optimized_params
 end
 
-function plot_results(file_pattern::String, save_path::String)
-    # Find all relevant files in the folder
+function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
+
     data_folder = "data"
     filenames = filter(x -> occursin(file_pattern, x), readdir(data_folder))
     filenames = [joinpath(data_folder, x) for x in filenames]
@@ -134,16 +136,42 @@ function plot_results(file_pattern::String, save_path::String)
     output_folder = "output"
     save_path = joinpath(output_folder, save_path)
 
-    optimized_params = optimize_params_across_files(filenames)
+    optimized_params = optimize_params_across_files(filenames, max_iter)
     a, λ = optimized_params[1:3], optimized_params[4:6]
+    θ_values = optimized_params[7:end]
 
-    p_error = plot(title="Error vs Time for Multiple Files", xlabel="Time", ylabel="Error")
-    p_R_vs_td = plot(title="R_calculated vs t_d for Multiple Files", xlabel="t_d", ylabel="R_calculated")
+    p_error = plot(
+        title=L"Error \, vs \, Time \, for \, Multiple \, Files", 
+        xlabel=L"Time \, (t)", 
+        ylabel=L"Error", 
+        legend=:topright, 
+        grid=false
+    )
+    p_R_vs_td = plot(
+        title=L"R_{\text{calculated}} \, vs \, t_d \, for \, Multiple \, Files", 
+        xlabel=L"Dimensionless \, Time \, (t_d)", 
+        ylabel=L"R_{\text{calculated}}", 
+        legend=:topright, 
+        grid=false
+    )
+    p_model_fit = plot(
+        title=L"Model \, Fit \, for \, Multiple \, Files", 
+        xlabel=L"Time \, (t)", 
+        ylabel=L"R", 
+        legend=:topright, 
+        grid=false
+    )
+    p_residuals = plot(
+        title=L"Residuals \, for \, Multiple \, Files", 
+        xlabel=L"Time \, (t)", 
+        ylabel=L"Residuals", 
+        legend=:topright, 
+        grid=false
+    )
+    all_residuals = []
 
-    θ_values = Float64[]
-    for filename in filenames
-        θ = optimize_theta(filename, a, λ)
-        push!(θ_values, θ)
+    for (i, filename) in enumerate(filenames)
+        θ = θ_values[i]
         ExprmntData = read_data_file(filename)
         t_exprmnt = ExprmntData[:, 1]
         R_exprmnt_normalized = R_experimental(filename)
@@ -157,18 +185,51 @@ function plot_results(file_pattern::String, save_path::String)
         end
 
         error = R_exprmnt_normalized .- R_calculated_normalized
-        
+        residuals = R_exprmnt_normalized .- R_calculated_normalized
+        append!(all_residuals, residuals)
+
         plot!(p_error, t_exprmnt, error, label=filename, lw=2)
         plot!(p_R_vs_td, t_d, R_calculated_normalized, label=filename, lw=2)
+        plot!(p_model_fit, t_exprmnt, R_exprmnt_normalized, label=filename * " Experimental", lw=2, linestyle=:solid)
+        plot!(p_model_fit, t_exprmnt, R_calculated_normalized, label=filename * " Calculated", lw=2, linestyle=:dash)
+        plot!(p_residuals, t_exprmnt, residuals, label=filename, lw=2)
     end
 
     savefig(p_error, save_path * "_error.png")
     savefig(p_R_vs_td, save_path * "_R_vs_td.png")
+    savefig(p_model_fit, save_path * "_model_fit.png")
+    savefig(p_residuals, save_path * "_residuals.png")
+
+    # Histogram of residuals
+    p_hist_residuals = histogram(all_residuals, bins=30, 
+        title=L"Histogram \, of \, Residuals", 
+        xlabel=L"Residuals", 
+        ylabel=L"Frequency", 
+        legend=false, 
+        grid=false
+    )
+    savefig(p_hist_residuals, save_path * "_hist_residuals.png")
+
+    # Box plot of residuals
+    p_box_residuals = boxplot(all_residuals, 
+        title=L"Box \, Plot \, of \, Residuals", 
+        ylabel=L"Residuals", 
+        legend=false, 
+        grid=false
+    )
+    savefig(p_box_residuals, save_path * "_box_residuals.png")
+
+    # Heatmap of parameter sensitivity
+    sensitivity_data = [a λ]
+    p_heatmap_sensitivity = heatmap(sensitivity_data, 
+        title=L"Heatmap \, of \, Parameter \, Sensitivity", 
+        xlabel=L"Parameters \, a", 
+        ylabel=L"Parameters \, \lambda", 
+        color=:viridis
+    )
+    savefig(p_heatmap_sensitivity, save_path * "_heatmap_sensitivity.png")
     
-    # Convert θ values to degrees
     θ_values_deg = rad2deg.(θ_values)
-    
-    # Create a DataFrame to display optimized parameters
     df = DataFrame(
         File = filenames,
         a1 = a[1],
@@ -182,9 +243,14 @@ function plot_results(file_pattern::String, save_path::String)
     
     println("Optimized Parameters:")
     println(df)
+
+    # Save the DataFrame to a CSV file
+    results_file = save_path * "_optimized_parameters.csv"
+    CSV.write(results_file, df)
+    println("Optimized parameters saved to ", results_file)
 end
 
-
+#Optimization for one single file:
 function optimize_parameters(filename::String)
     initial_params = [0.33, 0.33, 0.33, 0.01, 0.01, 0.01, 0.0]
     obj_func = params -> global_objective(params, filename)

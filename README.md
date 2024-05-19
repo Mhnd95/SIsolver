@@ -25,8 +25,8 @@ SIsolver.optimize_params_across_files(["data/0 hr.csv","data/1 hr.csv"], [0.33,0
 
 Current step:
 
-Status: The code takes one file and predicts all parameters from that input.
-Goal: Need to take all data files and have the same "a" and "lambda" parameters across the different tests but independent "theta" for each case.
+Status: The code runs smoothly and produces favorable results.
+Goal: Increase data set size and generate synthetic sets to test for code validity.
 
 Trial:
 
@@ -36,12 +36,26 @@ LBFG results:
 
 Optimized Parameters:
 6×8 DataFrame
- Row │ File            a1       a2       a3        λ1         λ2         λ3         θ_deg   
-     │ String          Float64  Float64  Float64   Float64    Float64    Float64    Float64 
-─────┼──────────────────────────────────────────────────────────────────────────────────────
-   1 │ data/0 hr.csv   0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  86.9234
-   2 │ data/1 hr.csv   0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  88.1008
-   3 │ data/12 hr.csv  0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  89.016
-   4 │ data/24 hr.csv  0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  89.2684
-   5 │ data/48 hr.csv  0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  89.3883
-   6 │ data/6 hr.csv   0.33803  0.33803  0.295206  0.0165895  0.0165895  0.0165895  88.7665
+ Row │ File            a1          a2          a3        λ1          λ2          λ3         θ_deg
+     │ String          Float64     Float64     Float64   Float64     Float64     Float64    Float64
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ data/0 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  85.9344
+   2 │ data/1 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  87.5097
+   3 │ data/12 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  88.7134
+   4 │ data/24 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  89.0447
+   5 │ data/48 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  89.2028
+   6 │ data/6 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  88.385
+
+NelderMead results:
+
+Optimized Parameters:
+6×8 DataFrame
+ Row │ File            a1        a2       a3        λ1          λ2         λ3           θ_deg
+     │ String          Float64   Float64  Float64   Float64     Float64    Float64      Float64  
+─────┼───────────────────────────────────────────────────────────────────────────────────────────
+   1 │ data/0 hr.csv   0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679   6.22454
+   2 │ data/1 hr.csv   0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  52.131
+   3 │ data/12 hr.csv  0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  71.4522
+   4 │ data/24 hr.csv  0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  76.3207
+   5 │ data/48 hr.csv  0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  78.595
+   6 │ data/6 hr.csv   0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  66.5012
