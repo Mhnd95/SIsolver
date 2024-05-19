@@ -14,7 +14,6 @@ SIsolver is a Julia module for optimizing parameters and visualizing data from s
 - [Results](#results)
   - [LBFGS Results](#lbfgs-results)
   - [NelderMead Results](#neldermead-results)
-- [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
@@ -89,47 +88,39 @@ SIsolver.plot_results(file_pattern, save_path, max_iter=1000)
 
 Optimized Parameters:
 
-Row|File|a1|a2|a3|λ1|λ2|λ3|θ_deg
-----------------------------------------------------------------------------------------------------
+|#|File|a1|a2|a3|λ1|λ2|λ3|θ_deg
+|-|:--------------:|:-----------|:-----------|:----------|:------------|:------------|:-----------|:---------|
+|1| data/0 hr.csv  | 0.00327045 | 0.00327045 |  0.967117 |  2.2942e-18 |  2.2942e-18 |  0.0129114 |  85.9344 |
+|2| data/1 hr.csv  | 0.00327045 | 0.00327045 |  0.967117 |  2.2942e-18 |  2.2942e-18 |  0.0129114 |  87.5097 |
+|3│ data/6 hr.csv  | 0.00327045 | 0.00327045 |  0.967117 |  2.2942e-18 |  2.2942e-18 |  0.0129114 |  88.385  |
+|4│ data/12 hr.csv | 0.00327045 | 0.00327045 |  0.967117 |  2.2942e-18 |  2.2942e-18 |  0.0129114 |  88.7134 |
+|5│ data/24 hr.csv | 0.00327045 | 0.00327045 |  0.967117 |  2.2942e-18 |  2.2942e-18 |  0.0129114 |  89.0447 |
+|6│ data/48 hr.csv | 0.00327045 | 0.00327045 |  0.967117 |  2.2942e-18 |  2.2942e-18 |  0.0129114 |  89.2028 |
 
-   1 | data/0 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  85.9344
-   2 | data/1 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  87.5097
-   3 │ data/12 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  88.7134
-   4 │ data/24 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  89.0447
-   5 │ data/48 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  89.2028
-   6 │ data/6 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  88.385
+### NelderMead Results
+
+Optimized Parameters:
+
+|#|File|a1|a2|a3|λ1|λ2|λ3|θ_deg
+|-|:--------------:|:-----------|:--------|:----------|:------------|:-----------|:-------------|:---------|
+|1| data/0 hr.csv  | 0.366921   | 7797.25 |  0.604348 |  0.00089564 |  1.16332e5 |  0.000895679 |  6.22454 |
+|2| data/1 hr.csv  | 0.366921   | 7797.25 |  0.604348 |  0.00089564 |  1.16332e5 |  0.000895679 |  52.131  |
+|3│ data/6 hr.csv  | 0.366921   | 7797.25 |  0.604348 |  0.00089564 |  1.16332e5 |  0.000895679 |  66.5012 |
+|4│ data/12 hr.csv | 0.366921   | 7797.25 |  0.604348 |  0.00089564 |  1.16332e5 |  0.000895679 |  71.4522 |
+|5│ data/24 hr.csv | 0.366921   | 7797.25 |  0.604348 |  0.00089564 |  1.16332e5 |  0.000895679 |  76.3207 |
+|6│ data/48 hr.csv | 0.366921   | 7797.25 |  0.604348 |  0.00089564 |  1.16332e5 |  0.000895679 |  78.595  |
+   
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Contact
+
+For questions or feedback, please contact me directly.
+
 
 --------------------
-Using the following sequence in Visual Studios:
-
-file path:
-
-Visual Studio = "data\\x.csv"
-Github Codespace = "data/x.csv"
-
-Initial optimization parameters:
-
-θ = 0 radians
-a[1:3] = 0.33
-λ[1:3] = 0.01
-
-julia --project=.
-
-using SIsolver
-
-SIsolver.optimize_parameters("data/0 hr.csv",[0.33,0.33,0.33,0.01,0.01,0.01,0.0])
-
-SIsolver.optimize_params_across_files(["data/0 hr.csv","data/1 hr.csv"], [0.33,0.33,0.33,0.01,0.01,0.01,0.0])
-
-Current step:
-
-Status: The code runs smoothly and produces favorable results.
-Goal: Increase data set size and generate synthetic sets to test for code validity.
-
-Trial:
-
-SIsolver.plot_results(" hr.csv","trial")
-
+```sh
 LBFG results:
 
 Optimized Parameters:
@@ -157,3 +148,4 @@ Optimized Parameters:
    4 │ data/24 hr.csv  0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  76.3207
    5 │ data/48 hr.csv  0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  78.595
    6 │ data/6 hr.csv   0.366921  7797.25  0.604348  0.00089564  1.16332e5  0.000895679  66.5012
+```
