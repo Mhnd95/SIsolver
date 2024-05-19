@@ -2,6 +2,104 @@
 
 Project to apply an algorithm that takes spontaneous imbibition data and predicts contact angle or any other missing parameter.  
 
+SIsolver is a Julia module for optimizing parameters and visualizing data from spontaneous imbibition experiments. It predicts contact angles or other missing parameters using provided data.
+
+## Table of Contents
+
+- [Description](#description)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Current Status](#current-status)
+- [Trial](#trial)
+- [Results](#results)
+  - [LBFGS Results](#lbfgs-results)
+  - [NelderMead Results](#neldermead-results)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+## Description
+
+SIsolver applies an algorithm to spontaneous imbibition data to predict contact angles or other missing parameters. It includes functions for reading data files, calculating shape factors, optimizing parameters, and generating various plots.
+
+## Installation
+
+To install SIsolver, clone the repository and add it to your Julia environment:
+
+```sh
+git clone https://github.com/Mhnd95/SIsolver.git
+cd SIsolver
+julia --project=.
+```
+
+In the Julia REPL, activate the environment and instantiate the dependencies:
+
+```julia
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
+```
+
+## Usage
+
+Here's a basic example of how to use SIsolver:
+
+```julia
+using SIsolver
+
+# Define the folder containing the data files and the file pattern
+file_pattern = " hr.csv"
+
+# Define the base save path for the plots
+save_path = "results"
+
+# Call the function to generate and save the plots and display the table
+SIsolver.plot_results(file_pattern, save_path, max_iter=1000)
+```
+
+To optimize parameters for a single file:
+
+```julia
+using SIsolver
+
+filename = "data/0 hr.csv"
+optimized_params = SIsolver.optimize_parameters(filename)
+println("Optimized parameters: ", optimized_params)
+```
+
+## Current Status
+
+***Status**: The code runs smoothly and produces favorable results.
+***Goal**: Increase data set size and generate synthetic sets to test for code validity.
+
+## Trial
+
+```julia
+using SIsolver
+
+file_pattern = " hr.csv"
+save_path = "trial"
+
+SIsolver.plot_results(file_pattern, save_path, max_iter=1000)
+```
+
+## Results
+
+### LBFGS Results
+
+Optimized Parameters:
+
+Row|File|a1|a2|a3|λ1|λ2|λ3|θ_deg
+----------------------------------------------------------------------------------------------------
+
+   1 | data/0 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  85.9344
+   2 | data/1 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  87.5097
+   3 │ data/12 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  88.7134
+   4 │ data/24 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  89.0447
+   5 │ data/48 hr.csv  0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  89.2028
+   6 │ data/6 hr.csv   0.00327045  0.00327045  0.967117  2.2942e-18  2.2942e-18  0.0129114  88.385
+
+--------------------
 Using the following sequence in Visual Studios:
 
 file path:

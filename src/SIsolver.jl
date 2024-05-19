@@ -247,7 +247,8 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # Save the DataFrame to a CSV file
     results_file = save_path * "_optimized_parameters.csv"
     CSV.write(results_file, df)
-    println("Optimized parameters saved to ", results_file)
+    println("Optimized parameters plots saved to ", results_file)
+    println("Optimized parameters parameters saved to ", save_path * "_optimized_parameters.csv")
 end
 
 #Optimization for one single file:
