@@ -1,0 +1,18 @@
+﻿Data Source:,"Digitized from Figure 3 from SPE paper titled ""The Effect of Crude-Oil Aging Time and Temperature on the Rate of water Imbibition and Long-Term Recovery by Imbibition"" by Xian-min Zhou, Ole Torsaeter, Xina Xie and N.R. Morrow",,,,,
+Core Data,Core No.,Aging Time (hr),Porosity (%) Nitrogen,Nitrogen Permeability (md),Brine Permeability (md),Swi (%)
+,24,0,21.5,618.1,269.5,25.4
+Time,Recovery,,,,,
+(min),(%),,,,,
+1.010481706,7.532493406,,,,,
+3.019881909,8.284228373,,,,,
+4.987707493,13.15835702,,,,,
+9.996336357,18.91842777,,,,,
+14.83980282,22.14946125,,,,,
+19.88059219,24.30219355,,,,,
+29.61147172,26.30897391,,,,,
+39.6677848,28.32046565,,,,,
+49.81881294,29.95817637,,,,,
+59.3196451,30.8449598,,,,,
+79.72539422,31.49095784,,,,,
+99.71849628,32.32847365,,,,,
+120.0815795,32.97935135,,,,,

@@ -1,0 +1,17 @@
+Data Source:,"Digitized from Figure 2 from SPE paper titled ""Application of PC Spreadsheet Software for Non-linear Parameter Optimization"" by Dr. A. Gupta",,,,,
+Core Data,Core No.,Aging Time (hr),Porosity (%) Nitrogen,Nitrogen Permeability (md),Brine Permeability (md),Swi (%)
+,12,48,21.3,600.2,264,26
+Time,Recovery,,,,,
+(min),(%),,,,,
+2.007173914,1.031676039,,,,,
+5.076843133,1.385403894,,,,,
+10.18670614,2.078815592,,,,,
+14.98246787,3.027828283,,,,,
+19.96780891,4.104294145,,,,,
+29.71536955,6.955983353,,,,,
+39.24358619,8.793604388,,,,,
+48.84135963,10.50473872,,,,,
+59.06131373,13.0405736,,,,,
+78.48655363,16.18893876,,,,,
+98.05048918,16.71611769,,,,,
+118.9526315,17.53945914,,,,,
