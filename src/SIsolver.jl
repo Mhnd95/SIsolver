@@ -1,6 +1,6 @@
 module SIsolver
 
-# to test if the module is working and loaded properly
+# to test if the module is loaded and working properly
 function hello()
     println("Hello, World!")
     x = 1
@@ -20,7 +20,6 @@ using StatsPlots
 function read_data_file(filename::String)
     CSV.read(filename, DataFrame; header=false, skipto=6) |> Tables.matrix
 end
-
 
 function shape_factor()
     areas = [0.5 * 1.5^2 * pi, 2.8 * 2 * pi * 1.5]
