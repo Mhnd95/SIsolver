@@ -23,7 +23,6 @@ end
 
 
 function shape_factor()
-    # F_s = 1 / V_ma * sum ( Area of ith surface open to flow / Distance of the ith surface from center of matrix ) from 1 to number of surfaces
     areas = [0.5 * 1.5^2 * pi, 2.8 * 2 * pi * 1.5]
     distances = [1.5, 1.4]
     volume = 0.5 * 1.5^2 * pi * 2.8
@@ -38,19 +37,12 @@ function t_dimensionless(filename::String, θ::Float64)
     t_exprmnt = ExprmntData[:, 1]
     F_s = shape_factor()
 
-    # dimensionless time equation
-    # t_d = [ ( σ * cos(θ) F_s / µ_w ) * sqrt(k/Φ) ] t_exprmnt
-    # σ = interfacial tension, θ = contact angle, µ_w = water viscosity, k = permeability, Φ = porosity
     σ = 14.12       # interfacial tension
     µ_w = 0.983     # water viscosity
-
-    # k = ( 276.2 + 251 + 249.3 + 273.6 + 264 + 274.4 ) / 6            # permeability
-    k = 276.2
-    # Φ = ( 21.7 + 21.3 + 21.6 + 21.3 + 21.3 + 21.1 ) / 6            # porosity
-    Φ = 21.7
+    k = 276.2       # permeability
+    Φ = 21.7        # porosity
 
     t_d = ( (σ * cos(θ) * F_s / µ_w) * sqrt(k / Φ) ) .* t_exprmnt
-    
 
     return t_d
 end
@@ -78,8 +70,12 @@ end
 
 function global_objective(params::Vector{Float64}, filenames::Vector{String})
     n_files = length(filenames)
-    a, λ = params[1:3], params[4:6]
+    a = params[1:3]
+    λ = params[4:6]
     θ_values = params[7:end]
+
+    # Normalize a to ensure the sum is 1
+    a = a / sum(a)
 
     total_error = 0.0
     for i in 1:n_files
@@ -117,14 +113,26 @@ function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1
     initial_θ = fill(0.0, n_files)
     initial_params = vcat(initial_params, initial_θ)
 
-    obj_func = params -> global_objective(params, filenames)
+    obj_func = params -> begin
+        # Ensure the sum of the first three parameters (a) is 1
+        a = params[1:3] / sum(params[1:3])
+        remaining_params = params[4:end]
+        normalized_params = vcat(a, remaining_params)
+        global_objective(normalized_params, filenames)
+    end
 
     lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, fill(0.0, n_files)...]
     upper_bounds = [Inf, Inf, Inf, Inf, Inf, Inf, fill(π, n_files)...]
     
     result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), Optim.Options(show_trace=true, iterations=max_iter))
     optimized_params = result.minimizer
-    return optimized_params
+    
+    # Ensure the sum of the first three parameters (a) is 1
+    a = optimized_params[1:3] / sum(optimized_params[1:3])
+    remaining_params = optimized_params[4:end]
+    normalized_params = vcat(a, remaining_params)
+    
+    return normalized_params
 end
 
 function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
@@ -265,14 +273,11 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     println("Optimized parameters saved to ", results_file)
 end
 
-#Optimization for one single file:
+# Optimization for one single file:
 function optimize_parameters(filename::String)
     initial_params = [0.33, 0.33, 0.33, 0.01, 0.01, 0.01, 0.0]
     obj_func = params -> global_objective(params, filename)
-    #lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Lower bounds for a and λ
-    #upper_bounds = [Inf, Inf, Inf, Inf, Inf, Inf] # No upper bounds for a and λ
     
-    #result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), Optim.Options(show_trace=true))
     result = Optim.optimize(obj_func, initial_params, NelderMead(), Optim.Options(show_trace=true))
     optimized_params = result.minimizer
 
