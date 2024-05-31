@@ -123,15 +123,20 @@ function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1
     lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, fill(0.0, n_files)...]
     upper_bounds = [Inf, Inf, Inf, Inf, Inf, Inf, fill(π, n_files)...]
     
-    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), Optim.Options(show_trace=true, iterations=max_iter))
-    optimized_params = result.minimizer
+    options = Optim.Options(store_trace=true, show_trace=true, iterations=max_iter)
     
+    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), options)
+    optimized_params = result.minimizer
+    trace = result.trace
+
     # Ensure the sum of the first three parameters (a) is 1
     a = optimized_params[1:3] / sum(optimized_params[1:3])
     remaining_params = optimized_params[4:end]
     normalized_params = vcat(a, remaining_params)
     
-    return normalized_params
+    objective_history = [trace[i].value for i in 1:length(trace)]
+    
+    return normalized_params, objective_history
 end
 
 function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
@@ -145,7 +150,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # Colors for consistency across plots
     colors = distinguishable_colors(length(filenames))
 
-    optimized_params = optimize_params_across_files(filenames, max_iter)
+    optimized_params, objective_history = optimize_params_across_files(filenames, max_iter)
     a, λ = optimized_params[1:3], optimized_params[4:6]
     θ_values = optimized_params[7:end]
 
@@ -270,6 +275,15 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     results_file = save_path * "_optimized_parameters.csv"
     CSV.write(results_file, df)
     println("Optimized parameters saved to ", results_file)
+
+    # Plot optimization objective function history
+    p_objective_history = plot(
+        1:length(objective_history), objective_history, 
+        xlabel="Iteration", ylabel="Objective Function Value", 
+        title="Optimization Objective Function vs. Iteration", 
+        lw=2, label="Objective Function History"
+    )
+    savefig(p_objective_history, save_path * "_objective_history.png")
 end
 
 # Optimization for one single file:
