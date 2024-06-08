@@ -154,18 +154,10 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     a, λ = optimized_params[1:3], optimized_params[4:6]
     θ_values = optimized_params[7:end]
 
-    p_error = plot(
-        title=L"Error \, vs \, Time \, for \, Multiple \, Files", 
-        xlabel=L"Time \, (t)", 
-        ylabel=L"Error", 
-        legend=:topright, 
-        grid=false,
-        background_color=:white
-    )
     p_R_vs_td = plot(
-        title=L"R_{\text{calculated}} \, vs \, t_d \, for \, Multiple \, Files", 
+        title=L"R_calculated \, vs \, t_d \, for \, Multiple \, Files", 
         xlabel=L"Dimensionless \, Time \, (t_d)", 
-        ylabel=L"R_{\text{calculated}}", 
+        ylabel=L"R_calculated", 
         legend=:topright, 
         grid=false,
         background_color=:white
@@ -178,7 +170,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         grid=false,
         background_color=:white
     )
-    all_residuals = []
+    all_residuals = Dict{String, Vector{Float64}}()
 
     for (i, filename) in enumerate(filenames)
         θ = θ_values[i]
@@ -196,16 +188,15 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
 
         error = R_exprmnt_normalized .- R_calculated_normalized
         residuals = R_exprmnt_normalized .- R_calculated_normalized
-        append!(all_residuals, residuals)
+        all_residuals[filename] = residuals
 
         color = colors[i]
 
-        plot!(p_error, t_exprmnt, error, label=filename, lw=2, color=color)
         plot!(p_R_vs_td, t_d, R_calculated_normalized, label=filename, lw=2, color=color)
         plot!(p_residuals, t_exprmnt, residuals, label=filename, lw=2, color=color)
 
         # Individual model fit plot for each file
-        clean_filename = replace(basename(filename), " " => "_")
+        clean_filename = replace(basename(filename), ".csv" => "")
         title_string = L"Model \, Fit \, for \, " * LaTeXString(clean_filename)
         p_model_fit = plot(
             title=title_string, 
@@ -217,15 +208,14 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         )
         plot!(p_model_fit, t_exprmnt, R_exprmnt_normalized, label=L"Experimental", lw=2, linestyle=:solid, color=color)
         plot!(p_model_fit, t_exprmnt, R_calculated_normalized, label=L"Calculated", lw=2, linestyle=:dash, color=color)
-        savefig(p_model_fit, save_path * "_model_fit_" * clean_filename * ".png")
+        savefig(p_model_fit, save_path * "_model_fit_" * replace(clean_filename, " " => "_") * ".png")
     end
 
-    savefig(p_error, save_path * "_error.png")
     savefig(p_R_vs_td, save_path * "_R_vs_td.png")
     savefig(p_residuals, save_path * "_residuals.png")
 
     # Histogram of residuals
-    p_hist_residuals = histogram(all_residuals, bins=30, 
+    p_hist_residuals = histogram(collect(Iterators.flatten(values(all_residuals))), bins=30, 
         title=L"Histogram \, of \, Residuals", 
         xlabel=L"Residuals", 
         ylabel=L"Frequency", 
@@ -236,13 +226,19 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     savefig(p_hist_residuals, save_path * "_hist_residuals.png")
 
     # Box plot of residuals
-    p_box_residuals = boxplot(all_residuals, 
-        title=L"Box \, Plot \, of \, Residuals", 
+    short_filenames = [replace(basename(f), r"\.csv" => "") for f in filenames]
+    p_box_residuals = plot(
+        title=L"Box \, Plot \, of \, Residuals \, for \, $file_pattern", 
         ylabel=L"Residuals", 
+        xticks=(1:length(short_filenames), short_filenames),
         legend=false, 
         grid=false,
-        background_color=:white
+        background_color=:white,
+        xrotation=90  # Rotate x-axis labels to be vertical
     )
+    for (i, (filename, residuals)) in enumerate(all_residuals)
+        boxplot!(p_box_residuals, fill(i+1, length(residuals)), residuals, positions=[i+1], label=false)
+    end
     savefig(p_box_residuals, save_path * "_box_residuals.png")
 
     # Heatmap of parameter sensitivity
@@ -279,9 +275,14 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # Plot optimization objective function history
     p_objective_history = plot(
         1:length(objective_history), objective_history, 
-        xlabel="Iteration", ylabel="Objective Function Value", 
-        title="Optimization Objective Function vs. Iteration", 
-        lw=2, label="Objective Function History"
+        xlabel=L"Iteration", 
+        ylabel=L"Objective \, Function \, Value", 
+        title=L"Optimization \, Objective \, Function \, vs. \, Iteration", 
+        lw=2, 
+        label="Objective Function History",
+        legend=:topright,
+        grid=false,
+        background_color=:white
     )
     savefig(p_objective_history, save_path * "_objective_history.png")
 end
