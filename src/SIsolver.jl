@@ -139,6 +139,13 @@ function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1
     return normalized_params, objective_history
 end
 
+# Use the GR backend in non-display mode
+gr(format=:png)
+
+function save_plot_data(data, file_path::String)
+    CSV.write(file_path, DataFrame(data))
+end
+
 function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
     data_folder = "data"
     filenames = filter(x -> occursin(file_pattern, x), readdir(data_folder))
@@ -154,6 +161,11 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     a, λ = optimized_params[1:3], optimized_params[4:6]
     θ_values = optimized_params[7:end]
 
+    # Data storage
+    plot_data = Dict{String, Any}()
+
+    # R_vs_td plot data
+    p_R_vs_td_data = DataFrame(Time_Dimensionless=Float64[], R_Calculated=Float64[], File=String[])
     p_R_vs_td = plot(
         title=L"R_calculated \, vs \, t_d \, for \, Multiple \, Files", 
         xlabel=L"Dimensionless \, Time \, (t_d)", 
@@ -162,6 +174,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         grid=false,
         background_color=:white
     )
+    
+    # Residuals plot data
+    p_residuals_data = DataFrame(Time=Float64[], Residuals=Float64[], File=String[])
     p_residuals = plot(
         title=L"Residuals \, for \, Multiple \, Files", 
         xlabel=L"Time \, (t)", 
@@ -195,6 +210,12 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         plot!(p_R_vs_td, t_d, R_calculated_normalized, label=filename, lw=2, color=color)
         plot!(p_residuals, t_exprmnt, residuals, label=filename, lw=2, color=color)
 
+        # Store R_vs_td data
+        append!(p_R_vs_td_data, DataFrame(Time_Dimensionless=t_d, R_Calculated=R_calculated_normalized, File=repeat([filename], length(t_d))))
+
+        # Store residuals data
+        append!(p_residuals_data, DataFrame(Time=t_exprmnt, Residuals=residuals, File=repeat([filename], length(residuals))))
+
         # Individual model fit plot for each file
         clean_filename = replace(basename(filename), ".csv" => "")
         title_string = L"Model \, Fit \, for \, " * LaTeXString(clean_filename)
@@ -211,6 +232,12 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         savefig(p_model_fit, save_path * "_model_fit_" * replace(clean_filename, " " => "_") * ".png")
     end
 
+    # Save R_vs_td plot data
+    save_plot_data(p_R_vs_td_data, save_path * "_R_vs_td_data.csv")
+    
+    # Save residuals plot data
+    save_plot_data(p_residuals_data, save_path * "_residuals_data.csv")
+    
     savefig(p_R_vs_td, save_path * "_R_vs_td.png")
     savefig(p_residuals, save_path * "_residuals.png")
 
@@ -228,7 +255,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # Box plot of residuals
     short_filenames = [replace(basename(f), r"\.csv" => "") for f in filenames]
     p_box_residuals = plot(
-        title=L"Box \, Plot \, of \, Residuals \, for \, $file_pattern", 
+        title=L"Box \, Plot \, of \, Residuals \, for \, $(LaTeXStrings.escape(file_pattern))", 
         ylabel=L"Residuals", 
         xticks=(1:length(short_filenames), short_filenames),
         legend=false, 
@@ -240,6 +267,13 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         boxplot!(p_box_residuals, fill(i+1, length(residuals)), residuals, positions=[i+1], label=false)
     end
     savefig(p_box_residuals, save_path * "_box_residuals.png")
+
+    # Save box plot data
+    box_plot_data = DataFrame(File=String[], Residuals=Float64[])
+    for (filename, residuals) in all_residuals
+        append!(box_plot_data, DataFrame(File=repeat([replace(basename(filename), ".csv" => "")], length(residuals)), Residuals=residuals))
+    end
+    save_plot_data(box_plot_data, save_path * "_box_plot_residuals_data.csv")
 
     # Heatmap of parameter sensitivity
     sensitivity_data = [a λ]
@@ -285,6 +319,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         background_color=:white
     )
     savefig(p_objective_history, save_path * "_objective_history.png")
+
+    # Save optimization objective function history data
+    save_plot_data(DataFrame(Iteration=1:length(objective_history), ObjectiveFunctionValue=objective_history), save_path * "_objective_history_data.csv")
 end
 
 # Optimization for one single file:
