@@ -16,6 +16,7 @@ using Optim
 using LaTeXStrings
 using Plots
 using StatsPlots
+using Dates
 
 function read_data_file(filename::String)
     CSV.read(filename, DataFrame; header=false, skipto=6) |> Tables.matrix
@@ -147,6 +148,7 @@ function save_plot_data(data, file_path::String)
 end
 
 function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
+    start_time = now()
     data_folder = "data"
     filenames = filter(x -> occursin(file_pattern, x), readdir(data_folder))
     filenames = [joinpath(data_folder, x) for x in filenames]
@@ -322,6 +324,10 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
 
     # Save optimization objective function history data
     save_plot_data(DataFrame(Iteration=1:length(objective_history), ObjectiveFunctionValue=objective_history), save_path * "_objective_history_data.csv")
+
+    end_time = now()
+    execution_time = end_time - start_time
+    println("Execution Time: ", execution_time)
 end
 
 # Optimization for one single file:
