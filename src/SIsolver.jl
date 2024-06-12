@@ -135,9 +135,6 @@ function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1
     return normalized_params, objective_history
 end
 
-# Use the GR backend in non-display mode
-gr(format=:png)
-
 function save_plot_data(data, file_path::String)
     CSV.write(file_path, DataFrame(data))
 end
@@ -169,7 +166,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         ylabel=L"R_{calculated}", 
         legend=:topright, 
         grid=false,
-        background_color=:white
+        background_color=:white,
+        xlims=(0, 10000),
+        ylims=(0, 1)
     )
     
     # Residuals plot data
@@ -180,7 +179,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         ylabel=L"Residuals", 
         legend=:topright, 
         grid=false,
-        background_color=:white
+        background_color=:white,
+        xlims=(0, 120),
+        ylims=(-0.2, 0.2)
     )
     all_residuals = Dict{String, Vector{Float64}}()
 
@@ -222,11 +223,13 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
             ylabel=L"R", 
             legend=:topright, 
             grid=false,
-            background_color=:white
+            background_color=:white,
+            xlims=(0, 120),
+            ylims=(0, 1)
         )
         plot!(p_model_fit, t_exprmnt, R_exprmnt_normalized, label=L"Experimental", lw=2, linestyle=:solid, color=color)
         plot!(p_model_fit, t_exprmnt, R_calculated_normalized, label=L"Calculated", lw=2, linestyle=:dash, color=color)
-        savefig(p_model_fit, save_path * "_model_fit_" * replace(clean_filename, " " => "_") * ".png")
+        savefig(p_model_fit, save_path * "_model_fit_" * replace(clean_filename, " " => "_") * ".svg")
     end
 
     # Save R_vs_td plot data
@@ -235,8 +238,8 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # Save residuals plot data
     save_plot_data(p_residuals_data, save_path * "_residuals_data.csv")
     
-    savefig(p_R_vs_td, save_path * "_R_vs_td.png")
-    savefig(p_residuals, save_path * "_residuals.png")
+    savefig(p_R_vs_td, save_path * "_R_vs_td.svg")
+    savefig(p_residuals, save_path * "_residuals.svg")
 
     # Histogram of residuals
     p_hist_residuals = histogram(collect(Iterators.flatten(values(all_residuals))), bins=30, 
@@ -247,7 +250,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         grid=false,
         background_color=:white
     )
-    savefig(p_hist_residuals, save_path * "_hist_residuals.png")
+    savefig(p_hist_residuals, save_path * "_hist_residuals.svg")
     
     # Clean filenames for labels
     clean_filename = filename -> replace(replace(basename(filename), r"\.csv" => ""), r"data/" => "")
@@ -263,9 +266,10 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         xticks=(1:length(filenames), residual_labels),  # Correct x-axis labels
         legend=false,
         grid=false,
-        background_color=:white
+        background_color=:white,
+        ylims=(-0.2, 0.2)
     )
-    savefig(p_box_residuals, save_path * "_box_residuals.png")
+    savefig(p_box_residuals, save_path * "_box_residuals.svg")
 
     # Save box plot data
     box_plot_data = DataFrame(File=String[], Residuals=Float64[])
@@ -283,7 +287,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         color=:viridis,
         background_color=:white
     )
-    savefig(p_heatmap_sensitivity, save_path * "_heatmap_sensitivity.png")
+    savefig(p_heatmap_sensitivity, save_path * "_heatmap_sensitivity.svg")
     
     θ_values_deg = rad2deg.(θ_values)
     df = DataFrame(
@@ -317,7 +321,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         grid=false,
         background_color=:white
     )
-    savefig(p_objective_history, save_path * "_objective_history.png")
+    savefig(p_objective_history, save_path * "_objective_history.svg")
 
     # Save optimization objective function history data
     save_plot_data(DataFrame(Iteration=1:length(objective_history), ObjectiveFunctionValue=objective_history), save_path * "_objective_history_data.csv")
