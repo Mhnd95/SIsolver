@@ -18,6 +18,7 @@ using Plots
 using StatsPlots
 using Dates
 using Random
+using Printf
 
 function read_data_file(filename::String)
     CSV.read(filename, DataFrame; header=false, skipto=6) |> Tables.matrix
@@ -96,7 +97,7 @@ function optimize_theta(filename::String, a::Vector{Float64}, λ::Vector{Float64
     initial_theta = [0.0]  # Initial guess for θ
     lower_bound = [0.0]
     upper_bound = [π]
-    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(NelderMead()), Optim.Options(show_trace=true))
+    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(LBFGS()), Optim.Options(show_trace=true))
     optimized_theta = result.minimizer[1]
     return optimized_theta
 end
@@ -121,7 +122,7 @@ function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1
     
     options = Optim.Options(store_trace=true, show_trace=true, iterations=max_iter)
     
-    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), options)
+    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(LBFGS()), options)
     optimized_params = result.minimizer
     trace = result.trace
 
@@ -141,6 +142,7 @@ end
 
 function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
     start_time = now()
+    optimization_method = "Fminbox(LBFGS)"
     data_folder = "data"
     filenames = filter(x -> occursin(file_pattern, x), readdir(data_folder))
     filenames = [joinpath(data_folder, x) for x in filenames]
@@ -290,6 +292,12 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     savefig(p_heatmap_sensitivity, save_path * "_heatmap_sensitivity.svg")
     
     θ_values_deg = rad2deg.(θ_values)
+    end_time = now()
+    execution_time = end_time - start_time
+    total_seconds = Int(floor(Nanosecond(execution_time).value // 1_000_000_000))
+    hours, rem = divrem(total_seconds, 3600)
+    minutes, seconds = divrem(rem, 60)
+    formatted_time = @sprintf("%02d:%02d:%02d", hours, minutes, seconds)
     df = DataFrame(
         File = filenames,
         a1 = a[1],
@@ -298,7 +306,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         λ1 = λ[1],
         λ2 = λ[2],
         λ3 = λ[3],
-        θ_deg = θ_values_deg
+        θ_deg = θ_values_deg,
+        OptimizationMethod = repeat([optimization_method], length(filenames)),
+        ExecutionTime = repeat([formatted_time], length(filenames))
     )
     
     println("Optimized Parameters:")
@@ -326,9 +336,7 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # Save optimization objective function history data
     save_plot_data(DataFrame(Iteration=1:length(objective_history), ObjectiveFunctionValue=objective_history), save_path * "_objective_history_data.csv")
 
-    end_time = now()
-    execution_time = end_time - start_time
-    println("Execution Time: ", execution_time)
+    println("Execution Time: ", formatted_time)
 end
 
 # Optimization for one single file:
