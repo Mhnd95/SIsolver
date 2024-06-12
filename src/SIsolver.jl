@@ -164,9 +164,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
     # R_vs_td plot data
     p_R_vs_td_data = DataFrame(Time_Dimensionless=Float64[], R_Calculated=Float64[], File=String[])
     p_R_vs_td = plot(
-        title=L"R_calculated \, vs \, t_d \, for \, Multiple \, Files", 
+        title=L"R_{calculated} \, vs \, t_d \, for \, Multiple \, Files", 
         xlabel=L"Dimensionless \, Time \, (t_d)", 
-        ylabel=L"R_calculated", 
+        ylabel=L"R_{calculated}", 
         legend=:topright, 
         grid=false,
         background_color=:white
