@@ -97,7 +97,7 @@ function optimize_theta(filename::String, a::Vector{Float64}, λ::Vector{Float64
     initial_theta = [0.0]  # Initial guess for θ
     lower_bound = [0.0]
     upper_bound = [π]
-    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(LBFGS()), Optim.Options(show_trace=true))
+    result = Optim.optimize(obj_func, lower_bound, upper_bound, initial_theta, Fminbox(NelderMead()), Optim.Options(show_trace=true))
     optimized_theta = result.minimizer[1]
     return optimized_theta
 end
@@ -122,7 +122,7 @@ function optimize_params_across_files(filenames::Vector{String}, max_iter::Int=1
     
     options = Optim.Options(store_trace=true, show_trace=true, iterations=max_iter)
     
-    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(LBFGS()), options)
+    result = Optim.optimize(obj_func, lower_bounds, upper_bounds, initial_params, Fminbox(NelderMead()), options)
     optimized_params = result.minimizer
     trace = result.trace
 
@@ -142,7 +142,7 @@ end
 
 function plot_results(file_pattern::String, save_path::String, max_iter::Int=1000)
     start_time = now()
-    optimization_method = "Fminbox(LBFGS)"
+    optimization_method = "Fminbox(NelderMead())"
     data_folder = "data"
     filenames = filter(x -> occursin(file_pattern, x), readdir(data_folder))
     filenames = [joinpath(data_folder, x) for x in filenames]
