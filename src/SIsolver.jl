@@ -17,15 +17,16 @@ using LaTeXStrings
 using Plots
 using StatsPlots
 using Dates
+using Random
 
 function read_data_file(filename::String)
     CSV.read(filename, DataFrame; header=false, skipto=6) |> Tables.matrix
 end
 
 function shape_factor()
-    areas = [0.5 * 1.5^2 * pi, 2.8 * 2 * pi * 1.5]
-    distances = [1.5, 1.4]
-    volume = 0.5 * 1.5^2 * pi * 2.8
+    areas = [1.5^2 * pi, 1.5^2 * pi, 2.8 * 2 * pi * 1.5]
+    distances = [1.4, 1.4, 1.5]
+    volume = 1.5^2 * pi * 2.8
     sum_A_over_d = sum(areas[i] / distances[i] for i in 1:length(areas))
     F_s = (1 / volume) * sum_A_over_d
 
@@ -56,12 +57,6 @@ function R_experimental(filename::String)
 end
 
 function R_calculated(filename::String, θ::Float64, a::Vector{Float64}, λ::Vector{Float64})
-    if length(a) != length(λ)
-        throw(ArgumentError("Length of 'a' and 'λ' vectors must be equal."))
-    end
-
-    # Normalized calculated recovery factor equation:
-    # (Rf/R_inf)_c = ( 1 -a[1]e^(-λ[1]*t_d)-a[2]e^(-λ[2]*t_d)-a[3]e^(-λ[3]*t_d))
     t_d = t_dimensionless(filename, θ)    
 
     R_calculated_normalized = 1 .- sum(a[i] .* exp.(-λ[i] .* t_d) for i in 1:length(a))
@@ -220,9 +215,9 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
 
         # Individual model fit plot for each file
         clean_filename = replace(basename(filename), ".csv" => "")
-        title_string = L"Model \, Fit \, for \, " * LaTeXString(clean_filename)
+        model_fit_title_string = L"Model \, Fit \, for \, " * LaTeXString(clean_filename)
         p_model_fit = plot(
-            title=title_string, 
+            title=model_fit_title_string, 
             xlabel=L"Time \, (t)", 
             ylabel=L"R", 
             legend=:topright, 
@@ -253,21 +248,23 @@ function plot_results(file_pattern::String, save_path::String, max_iter::Int=100
         background_color=:white
     )
     savefig(p_hist_residuals, save_path * "_hist_residuals.png")
-
+    
+    # Clean filenames for labels
+    clean_filename = filename -> replace(replace(basename(filename), r"\.csv" => ""), r"data/" => "")
     # Box plot of residuals
-    short_filenames = [replace(basename(f), r"\.csv" => "") for f in filenames]
-    p_box_residuals = plot(
-        title=L"Box \, Plot \, of \, Residuals \, for \, $(LaTeXStrings.escape(file_pattern))", 
-        ylabel=L"Residuals", 
-        xticks=(1:length(short_filenames), short_filenames),
-        legend=false, 
+    residuals_per_file = [R_experimental(filename) .- R_calculated(filename, θ_values[i], a, λ)[2] for (i, filename) in enumerate(filenames)]
+    residual_labels = [clean_filename(f) for f in filenames]
+
+    p_box_residuals = boxplot(
+        residuals_per_file,
+        positions = 1:length(filenames),
+        title=L"Box \, Plot \, of \, Residuals",
+        ylabel=L"Residuals",
+        xticks=(1:length(filenames), residual_labels),  # Correct x-axis labels
+        legend=false,
         grid=false,
-        background_color=:white,
-        xrotation=90  # Rotate x-axis labels to be vertical
+        background_color=:white
     )
-    for (i, (filename, residuals)) in enumerate(all_residuals)
-        boxplot!(p_box_residuals, fill(i+1, length(residuals)), residuals, positions=[i+1], label=false)
-    end
     savefig(p_box_residuals, save_path * "_box_residuals.png")
 
     # Save box plot data
@@ -356,6 +353,43 @@ function plot_error_vs_time(filename::String, θ::Float64, a::Vector{Float64}, �
     
     p = plot(t_exprmnt, error, xlabel="Time", ylabel="Error", title="Error vs Time", label="Error", lw=2)
     savefig(p, save_path)
+end
+
+function generate_synthetic_data(filename::String, params::Vector{Float64}, num_points::Int=100)
+    # Known parameters
+    a = params[1:3] / sum(params[1:3])  # Normalize a to sum to 1
+    λ = params[4:6]
+    θ = params[7]
+    
+    # Experimental setup
+    σ = 14.12             # Interfacial tension
+    µ_w = 0.983           # Water viscosity
+    k = 276.2             # Permeability
+    Φ = 21.7              # Porosity
+    F_s = shape_factor()  # Get shape factor from the same setup for simplicity
+
+    # Generate synthetic time points
+    t_exprmnt = range(1, stop=120, length=num_points)  # 1 to 120 minutes
+
+    # Calculate dimensionless time
+    t_d = ( (σ * cos(θ) * F_s / µ_w) * sqrt(k / Φ) ) .* t_exprmnt
+
+    # Generate synthetic recovery factor data
+    R_calculated = 1 .- sum(a[i] .* exp.(-λ[i] .* t_d) for i in 1:length(a))
+    
+    # Add noise to the data
+    noise_level = 0.01  # 1% noise
+    R_noisy = R_calculated .+ noise_level .* randn(length(R_calculated))
+    
+    # Ensure recovery factor is between 0 and 1
+    R_noisy = clamp.(R_noisy, 0.0, 1.0)
+
+    # Create a DataFrame
+    df = DataFrame(Time=t_exprmnt, Recovery=R_noisy .* 100)  # Recovery as percentage
+
+    # Save to CSV
+    filename = filename * ".csv"
+    CSV.write(filename, df)
 end
 
 end
