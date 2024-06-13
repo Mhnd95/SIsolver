@@ -371,7 +371,7 @@ function generate_synthetic_data(filename::String, params::Vector{Float64}, num_
     # Known parameters
     a = params[1:3] / sum(params[1:3])  # Normalize a to sum to 1
     λ = params[4:6]
-    θ = params[7]
+    θ = deg2rad(params[7])  # Convert degrees to radians
     
     # Experimental setup
     σ = 14.12             # Interfacial tension
