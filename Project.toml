@@ -1,7 +1,7 @@
 name = "SIsolver"
 uuid = "6a5557e6-422c-4682-962b-fe159e569f73"
-authors = ["Muhannad Alabdullateef <mh1995nd@gmail.com> and contributors"]
 version = "1.0.0-DEV"
+authors = ["Muhannad Alabdullateef <mh1995nd@gmail.com> and contributors"]
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -19,6 +19,7 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
+DataFrames = "1"
 julia = "1.9"
 
 [extras]
